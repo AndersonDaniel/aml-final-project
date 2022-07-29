@@ -1,0 +1,38 @@
+nonmonotonic creation time?
+batchnorm1d?
+normalization?
+
+
+
+
+
+
+
+
+
+
+
+training code
+evaluation
+
+augmentation
+
+
+nexus4_1 - 5000000 <-> 200Hz
+nexus4_2 - 5000000 <-> 200Hz
+s3_1 - 10000000 <-> 100Hz?
+s3_2 - 10000000 <-> 100Hz?
+s3mini_1 - 10000000 <-> 100Hz
+s3mini_2 - 10000000 <-> 100Hz???
+samsungold_1 - 20000000 <-> 50Hz
+samsungold_2 - 20000000 <-> 50Hz
+gear_1 - 10000000 <-> 100Hz
+gear_2 - 10000000 <-> 100Hz
+lgwatch_1 - 5000000 <-> 200Hz
+lgwatch_2 - 5000000 <-> 200Hz
+
+1sec = 1e9 creation time
+
+
+citations
+    https://pure.au.dk/ws/files/93103132/sen099_stisenAT3.pdf (collection of dataset A + downsampling interpolation)
