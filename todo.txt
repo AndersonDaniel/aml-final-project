@@ -1,3 +1,33 @@
+architecture
+take amplitude and remove channels
+normalization
+augmentation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 nonmonotonic creation time?
 batchnorm1d?
 normalization?

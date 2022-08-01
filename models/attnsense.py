@@ -3,35 +3,41 @@ import numpy as np
 
 
 class SensorConv(torch.nn.Module):
-    def __init__(self, group, conv_dim):
+    def __init__(self, group, n_freq, conv_dim, window_size):
         super().__init__()
+        self.window_size = window_size
         self.conv = torch.nn.Sequential(
-            torch.nn.Conv2d(len(group), 32, kernel_size=(3, 1)),
+            torch.nn.Conv2d(len(group), 32, kernel_size=(n_freq, 3), padding=(0, 1)),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(32),
-            torch.nn.Conv2d(32, 32, kernel_size=(3, 1)),
+            torch.nn.Conv2d(32, 32, kernel_size=(1, 3), padding=(0, 1)),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(32),
-            torch.nn.MaxPool2d((2, 1)),
-            torch.nn.Conv2d(32, conv_dim, kernel_size=(3, 1)),
+            torch.nn.MaxPool2d((1, 2)),
+            torch.nn.Conv2d(32, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
             torch.nn.ReLU(),
             torch.nn.Flatten(start_dim=1, end_dim=2)
         )
 
     def forward(self, x):
-        return self.conv(x)
+        res = self.conv(x)
+        res = torch.permute(torch.reshape(res, (*res.shape[:-1], self.window_size, -1)), (0, 2, 1, 3))
+        res = torch.flatten(res, start_dim=2, end_dim=3)
+
+        return res
 
 
 class AttnSense(torch.nn.Module):
-    def __init__(self, sensor_groups, n_classes, n_freq, conv_dim=64):
+    def __init__(self, sensor_groups, n_classes, n_freq, conv_dim=32, window_size=10, mini_window_size=20):
         super().__init__()
+        self.window_size = window_size
 
         self.sensor_convolutions = [
-            SensorConv(group, conv_dim)
+            SensorConv(group, n_freq, conv_dim, window_size)
             for group in sensor_groups
         ]
 
-        conv_embedding_dim = conv_dim * ((n_freq - 4) // 2 - 2)
+        conv_embedding_dim = conv_dim * (mini_window_size // 2)
 
         self.sensor_fusion_attention = torch.nn.Sequential(
             torch.nn.Linear(conv_embedding_dim, 1),
@@ -57,8 +63,6 @@ class AttnSense(torch.nn.Module):
             conv(x)
             for x, conv in zip(X, self.sensor_convolutions)
         ], dim=1)
-
-        conv_res = torch.permute(conv_res, (0, 3, 1, 2))
 
         fusion_weights = self.sensor_fusion_attention(conv_res)[..., 0]
 
