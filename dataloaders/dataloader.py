@@ -17,6 +17,24 @@ class SensorFusionDataset(Dataset):
             for i in range(len(self.spectrograms))
         ]
         self.n_freq = self.spectrograms[0][0].shape[0]
+        sensor_means = [
+            np.mean(x, axis=0)
+            for x in list(zip(*[[sensor.mean(axis=(0, 1))
+                                 for sensor in record]
+                                for record in self.spectrograms]))
+        ]
+        sensor_stds = [
+            np.mean(x, axis=0)
+            for x in list(zip(*[[sensor.std(axis=(0, 1))
+                                 for sensor in record]
+                                for record in self.spectrograms]))
+        ]
+
+        self.spectrograms = [
+            [(spectrogram - mean) / std for spectrogram, mean, std in
+             zip(record, sensor_means, sensor_stds)]
+            for record in self.spectrograms
+        ]
 
     def __len__(self):
         return sum(self.lengths)
