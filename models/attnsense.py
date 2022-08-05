@@ -7,7 +7,8 @@ class SensorConv(torch.nn.Module):
         super().__init__()
         self.window_size = window_size
         self.conv = torch.nn.Sequential(
-            torch.nn.Conv2d(len(group), 32, kernel_size=(n_freq, 3), padding=(0, 1)),
+            # torch.nn.Conv2d(len(group), 32, kernel_size=(n_freq, 3), padding=(0, 1)),
+            torch.nn.Conv2d(1, 32, kernel_size=(n_freq, 3), padding=(0, 1)),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(32),
             torch.nn.Conv2d(32, 32, kernel_size=(1, 3), padding=(0, 1)),

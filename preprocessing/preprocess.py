@@ -17,26 +17,38 @@ def main():
     for s in tqdm(range(101, 110)):
         preprocess(f'data/parsed/pamap2/{s}.npy', metadata['pamap2'])
 
+    # preprocess('data/parsed/pamap2/101.npy', metadata['pamap2'])
+
 
 def preprocess(path, metadata):
     x = np.load(path, allow_pickle=True).item()
     spectrograms = []
     for time_series in x['time_series']:
-        spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups']))
+        # spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups']))
+        spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups'],
+                                             window_sec=.2))
 
     np.save(path.replace('/parsed/', '/preprocessed/'),
             {'spectrograms': spectrograms, 'labels': x['labels']})
 
 
-def get_spectrograms(signals, freq_hz, signal_groups, window_sec=.25):
-    spectrograms = [
-        np.abs(stft(signals[..., i], nperseg=round(window_sec * freq_hz), fs=freq_hz, nfft=128)[2])
-        for i in range(signals.shape[1])
-    ]
+# def get_spectrograms(signals, freq_hz, signal_groups, window_sec=.25):
+#     spectrograms = [
+#         np.abs(stft(signals[..., i], nperseg=round(window_sec * freq_hz), fs=freq_hz)[2])
+#         for i in range(signals.shape[1])
+#     ]
+#
+#     return [
+#         np.stack([spectrograms[idx] for idx in group], axis=-1)
+#         for group in signal_groups
+#     ]
 
+
+def get_spectrograms(signals, freq_hz, signal_groups, window_sec=.25):
+    signals = [np.linalg.norm(signals[:, group], axis=1) for group in signal_groups]
     return [
-        np.stack([spectrograms[idx] for idx in group], axis=-1)
-        for group in signal_groups
+        np.abs(stft(signals[i], nperseg=round(window_sec * freq_hz), fs=freq_hz, nfft=32)[2])[..., np.newaxis]
+        for i in range(len(signals))
     ]
 
 

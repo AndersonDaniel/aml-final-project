@@ -7,8 +7,9 @@ import json
 from tqdm import tqdm
 
 
-N_EPOCHS = 1000
-
+N_EPOCHS = 2000
+WINDOW_SIZE = 8
+MINI_WINDOW_SIZE = 12
 
 def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -16,13 +17,17 @@ def main():
     with open('data/metadata.json', 'r') as f:
         metadata = json.load(f)
 
-    ds = SensorFusionDataset('data/preprocessed/pamap2/105.npy')
+    ds = SensorFusionDataset('data/preprocessed/pamap2/101.npy', window_size=WINDOW_SIZE,
+                             mini_window_size=MINI_WINDOW_SIZE)
     # ds = SensorFusionDataset('data/preprocessed/skoda/left.npy')
-    dl = DataLoader(ds, shuffle=True, batch_size=32, pin_memory=True)
-    model = AttnSense(metadata['pamap2']['sensor_groups'], ds.labels.shape[1], ds.n_freq, device).to(device)
+    dl = DataLoader(ds, shuffle=True, batch_size=64)
+    model = AttnSense(metadata['pamap2']['sensor_groups'], ds.labels.shape[1], ds.n_freq,
+                      window_size=WINDOW_SIZE, mini_window_size=MINI_WINDOW_SIZE).to(device)
     # model = AttnSense(metadata['skoda']['sensor_groups'], ds.labels.shape[1])
     loss_f = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=5e-5)
+    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
+    optimizer = torch.optim.RMSprop(model.parameters(), lr=1e-4)
+
     for epoch in range(1, N_EPOCHS + 1):
         pbar = tqdm(iter(dl), desc=f'Epoch {epoch}/{N_EPOCHS}')
         losses = []
