@@ -1,8 +1,9 @@
-take amplitude and remove channels
-normalization
 augmentation
-
-
+report
+    anchor paper review
+    related literature review
+    code explanation
+    results
 
 
 
