@@ -28,12 +28,12 @@ class SensorConv(torch.nn.Module):
 
 
 class AttnSense(torch.nn.Module):
-    def __init__(self, sensor_groups, n_classes, n_freq, conv_dim=32, window_size=10, mini_window_size=20):
+    def __init__(self, sensor_groups, n_classes, n_freq, device, conv_dim=32, window_size=10, mini_window_size=20):
         super().__init__()
         self.window_size = window_size
 
         self.sensor_convolutions = [
-            SensorConv(group, n_freq, conv_dim, window_size)
+            SensorConv(group, n_freq, conv_dim, window_size).to(device)
             for group in sensor_groups
         ]
 
