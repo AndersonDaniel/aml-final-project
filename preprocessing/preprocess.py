@@ -23,13 +23,27 @@ def main():
 def preprocess(path, metadata):
     x = np.load(path, allow_pickle=True).item()
     spectrograms = []
-    for time_series in x['time_series']:
+    labels = []
+    augmented = []
+    for time_series, label in zip(x['time_series'], x['labels']):
         # spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups']))
         spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups'],
                                              window_sec=.2))
+        labels.append(label)
+        augmented.append(False)
+        for i in range(3):
+            augmented_time_series = augment_time_series(time_series)
+            spectrograms.append(get_spectrograms(augmented_time_series, metadata['freq_hz'], metadata['sensor_groups'],
+                                                 window_sec=.2))
+            labels.append(label)
+            augmented.append(True)
 
     np.save(path.replace('/parsed/', '/preprocessed/'),
-            {'spectrograms': spectrograms, 'labels': x['labels']})
+            {'spectrograms': spectrograms, 'labels': labels, 'augmented': augmented})
+
+
+def augment_time_series(x):
+    return x + np.random.normal(loc=0, scale=x.std(axis=0) / 5, size=x.shape)
 
 
 # def get_spectrograms(signals, freq_hz, signal_groups, window_sec=.25):
