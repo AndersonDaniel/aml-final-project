@@ -3,11 +3,14 @@ import numpy as np
 
 
 class SensorConv(torch.nn.Module):
+    def init_weights(self, m):
+        if isinstance(m, torch.nn.Linear) or isinstance(m, torch.nn.Conv2d):
+            torch.nn.init.normal_(m.weight, 0, 0.01)
+
     def __init__(self, group, n_freq, conv_dim, window_size):
         super().__init__()
         self.window_size = window_size
         self.conv = torch.nn.Sequential(
-            # torch.nn.Conv2d(len(group), 32, kernel_size=(n_freq, 3), padding=(0, 1)),
             torch.nn.Conv2d(1, 32, kernel_size=(n_freq, 3), padding=(0, 1)),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(32),
@@ -17,8 +20,32 @@ class SensorConv(torch.nn.Module):
             torch.nn.MaxPool2d((1, 2)),
             torch.nn.Conv2d(32, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
             torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(32),
+            torch.nn.Conv2d(conv_dim, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(32),
+            torch.nn.MaxPool2d((1, 2)),
             torch.nn.Flatten(start_dim=1, end_dim=2)
         )
+
+        self.conv.apply(self.init_weights)
+
+        # self.conv = torch.nn.Sequential(
+        #     # torch.nn.Conv2d(len(group), 32, kernel_size=(n_freq, 3), padding=(0, 1)),
+        #     torch.nn.Conv2d(1, 32, kernel_size=(n_freq, 3), padding=(0, 1)),
+        #     torch.nn.ReLU(),
+        #     # torch.nn.BatchNorm2d(32),
+        #     torch.nn.Conv2d(32, 32, kernel_size=(1, 3), padding=(0, 1)),
+        #     torch.nn.MaxPool2d((1, 2)),
+        #     torch.nn.ReLU(),
+        #     # torch.nn.BatchNorm2d(32),
+        #     torch.nn.Conv2d(32, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Conv2d(conv_dim, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
+        #     torch.nn.MaxPool2d((1, 2)),
+        #     torch.nn.ReLU(),
+        #     torch.nn.Flatten(start_dim=1, end_dim=2)
+        # )
 
     def forward(self, x):
         res = self.conv(x)
@@ -38,7 +65,7 @@ class AttnSense(torch.nn.Module):
             for group in sensor_groups
         ]
 
-        conv_embedding_dim = conv_dim * (mini_window_size // 2)
+        conv_embedding_dim = conv_dim * (mini_window_size // 4)
 
         self.sensor_fusion_attention = torch.nn.Sequential(
             torch.nn.Linear(conv_embedding_dim, 1),

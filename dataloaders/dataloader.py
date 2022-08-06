@@ -36,6 +36,12 @@ class SensorFusionDataset(Dataset):
             for record in self.spectrograms
         ]
 
+
+        print('add noise?')
+        # self.spectrograms += [list(np.array(record) + np.random.normal(0, 0.1, np.array(record).shape)) for record in self.spectrograms]
+        # self.lengths += self.lengths
+        # self.labels = torch.vstack([self.labels,self.labels])
+
     def __len__(self):
         return sum(self.lengths)
 
