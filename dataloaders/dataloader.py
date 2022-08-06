@@ -8,6 +8,7 @@ class SensorFusionDataset(Dataset):
         data = np.load(data_path, allow_pickle=True).item()
         self.labels = torch.nn.functional.one_hot(torch.tensor(np.array(data['labels']))).to(torch.float32)
         self.spectrograms = data['spectrograms']
+        self.augmented = np.array(data['augmented'])
         self.window_size = window_size
         self.mini_window_size = mini_window_size
         self.full_window_size = window_size * mini_window_size
@@ -36,11 +37,6 @@ class SensorFusionDataset(Dataset):
             for record in self.spectrograms
         ]
 
-        print('add noise?')
-        # self.spectrograms += [list(np.array(record) + np.random.normal(0, 0.1, np.array(record).shape)) for record in self.spectrograms]
-        # self.lengths += self.lengths
-        # self.labels = torch.vstack([self.labels,self.labels])
-
     def __len__(self):
         return sum(self.lengths)
 
@@ -57,9 +53,8 @@ class SensorFusionDataset(Dataset):
             for s in self.spectrograms[session_idx]
         ]
 
-        # window = [w.reshape((*w.shape[:2], self.window_size, self.mini_window_size)) for w in full_window]
-
         return {
             'spectrograms': full_window,
-            'label': self.labels[session_idx]
+            'label': self.labels[session_idx],
+            'augmented': self.augmented[session_idx]
         }

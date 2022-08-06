@@ -5,48 +5,33 @@ import numpy as np
 class SensorConv(torch.nn.Module):
     def init_weights(self, m):
         if isinstance(m, torch.nn.Linear) or isinstance(m, torch.nn.Conv2d):
-            torch.nn.init.normal_(m.weight, 0, 0.01)
-            # torch.nn.init.xavier_normal_(m.weight, .05)
+            torch.nn.init.normal_(m.weight, 0, 0.02)
 
     def __init__(self, group, n_freq, conv_dim, window_size):
         super().__init__()
         self.window_size = window_size
         self.conv = torch.nn.Sequential(
-            torch.nn.Conv2d(1, 32, kernel_size=(n_freq, 3), padding=(0, 1)),
+            torch.nn.Conv2d(1, 64, kernel_size=(n_freq, 3), padding=(0, 1)),
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(32),
-            torch.nn.Conv2d(32, 32, kernel_size=(1, 3), padding=(0, 1)),
+            torch.nn.BatchNorm2d(64),
+            torch.nn.Conv2d(64, 64, kernel_size=(1, 3), padding=(0, 1)),
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(32),
+            torch.nn.BatchNorm2d(64),
             torch.nn.MaxPool2d((1, 2)),
-            torch.nn.Conv2d(32, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
+            torch.nn.Conv2d(64, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(conv_dim),
             torch.nn.Conv2d(conv_dim, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(conv_dim),
             torch.nn.MaxPool2d((1, 2)),
+            torch.nn.Conv2d(conv_dim, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(conv_dim),
             torch.nn.Flatten(start_dim=1, end_dim=2)
         )
 
         self.conv.apply(self.init_weights)
-
-        # self.conv = torch.nn.Sequential(
-        #     # torch.nn.Conv2d(len(group), 32, kernel_size=(n_freq, 3), padding=(0, 1)),
-        #     torch.nn.Conv2d(1, 32, kernel_size=(n_freq, 3), padding=(0, 1)),
-        #     torch.nn.ReLU(),
-        #     # torch.nn.BatchNorm2d(32),
-        #     torch.nn.Conv2d(32, 32, kernel_size=(1, 3), padding=(0, 1)),
-        #     torch.nn.MaxPool2d((1, 2)),
-        #     torch.nn.ReLU(),
-        #     # torch.nn.BatchNorm2d(32),
-        #     torch.nn.Conv2d(32, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
-        #     torch.nn.ReLU(),
-        #     torch.nn.Conv2d(conv_dim, conv_dim, kernel_size=(1, 3), padding=(0, 1)),
-        #     torch.nn.MaxPool2d((1, 2)),
-        #     torch.nn.ReLU(),
-        #     torch.nn.Flatten(start_dim=1, end_dim=2)
-        # )
 
     def forward(self, x):
         res = self.conv(x)

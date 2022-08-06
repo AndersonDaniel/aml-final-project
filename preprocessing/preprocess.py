@@ -17,8 +17,6 @@ def main():
     for s in tqdm(range(101, 110)):
         preprocess(f'data/parsed/pamap2/{s}.npy', metadata['pamap2'])
 
-    # preprocess('data/parsed/pamap2/101.npy', metadata['pamap2'])
-
 
 def preprocess(path, metadata):
     x = np.load(path, allow_pickle=True).item()
@@ -26,7 +24,6 @@ def preprocess(path, metadata):
     labels = []
     augmented = []
     for time_series, label in zip(x['time_series'], x['labels']):
-        # spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups']))
         spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups'],
                                              window_sec=.2))
         labels.append(label)
@@ -44,18 +41,6 @@ def preprocess(path, metadata):
 
 def augment_time_series(x):
     return x + np.random.normal(loc=0, scale=x.std(axis=0) / 5, size=x.shape)
-
-
-# def get_spectrograms(signals, freq_hz, signal_groups, window_sec=.25):
-#     spectrograms = [
-#         np.abs(stft(signals[..., i], nperseg=round(window_sec * freq_hz), fs=freq_hz)[2])
-#         for i in range(signals.shape[1])
-#     ]
-#
-#     return [
-#         np.stack([spectrograms[idx] for idx in group], axis=-1)
-#         for group in signal_groups
-#     ]
 
 
 def get_spectrograms(signals, freq_hz, signal_groups, window_sec=.25):
