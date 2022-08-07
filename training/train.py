@@ -14,7 +14,8 @@ N_EPOCHS = 1000
 WINDOW_SIZE = 10
 MINI_WINDOW_SIZE = 20
 
-SUBJECTS = [101, 102, 105, 106, 108, 109]
+TRAIN_SUBJECTS = [101, 102, 105, 108, 109]
+VAL_SUBJECTS = [106]
 # SUBJECTS = [105]
 
 def main():
@@ -23,21 +24,24 @@ def main():
     with open('data/metadata.json', 'r') as f:
         metadata = json.load(f)
 
-    datasets = [
+    train_datasets = [
         SensorFusionDataset(f'data/preprocessed/pamap2/{i}.npy', window_size=WINDOW_SIZE,
                             mini_window_size=MINI_WINDOW_SIZE)
-        for i in SUBJECTS
+        for i in TRAIN_SUBJECTS
     ]
-    ds = torch.utils.data.ConcatDataset(datasets)
-    n_train = int(.75 * len(ds))
-    n_val = len(ds) - n_train
-    train_ds, val_ds = torch.utils.data.random_split(ds, [n_train, n_val])
+    val_datasets = [
+        SensorFusionDataset(f'data/preprocessed/pamap2/{i}.npy', window_size=WINDOW_SIZE,
+                            mini_window_size=MINI_WINDOW_SIZE)
+        for i in VAL_SUBJECTS
+    ]
+    train_ds = torch.utils.data.ConcatDataset(train_datasets)
+    val_ds = torch.utils.data.ConcatDataset(val_datasets)
     val_ds = torch.utils.data.Subset(val_ds, indices=[i for i in range(len(val_ds))
                                                       if not val_ds[i]['augmented']])
     
     train_dl = DataLoader(train_ds, shuffle=True, batch_size=64)
     val_dl = DataLoader(val_ds, shuffle=True, batch_size=64)
-    model = AttnSense(metadata['pamap2']['sensor_groups'], datasets[0].labels.shape[1], datasets[0].n_freq,
+    model = AttnSense(metadata['pamap2']['sensor_groups'], train_datasets[0].labels.shape[1], train_datasets[0].n_freq,
                       device,
                       window_size=WINDOW_SIZE, mini_window_size=MINI_WINDOW_SIZE,
                       conv_dim=128).to(device)
