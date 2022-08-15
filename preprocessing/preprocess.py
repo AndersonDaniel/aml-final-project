@@ -29,7 +29,7 @@ def preprocess(path, metadata):
                                              window_sec=.2))
         labels.append(label)
         augmented.append(False)
-        for i in range(10):
+        for i in range(5):
             augmentation = np.random.choice(augmentations)
 #         for augmentation in augmentations:
 #             for i in range(3):
