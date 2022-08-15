@@ -1,59 +1,20 @@
-augmentation
-report
-    anchor paper review
-    related literature review
-    code explanation
-    results
+innovation directions
+    test time augmentation
+    more augmentations
+        https://github.com/terryum/Data-Augmentation-For-Wearable-Sensor-Data
+        ??
+    end2end differentiable with fft params and preprocessing
+    multi task learning?
 
 
 
 
 
 
+aws s3 --profile andersource cp --recursive data/preprocessed/pamap2 s3://neural-font-rasterization/temp/pamap2/
 
+aws s3 cp --recursive s3://neural-font-rasterization/temp/pamap2/ /home/ubuntu/aml-final-project/data/preprocessed/pamap2/
 
+aws s3 rm --recursive s3://neural-font-rasterization/temp/pamap2/
 
-
-
-
-
-
-
-nonmonotonic creation time?
-batchnorm1d?
-normalization?
-
-
-
-
-
-
-
-
-
-
-
-training code
-evaluation
-
-augmentation
-
-
-nexus4_1 - 5000000 <-> 200Hz
-nexus4_2 - 5000000 <-> 200Hz
-s3_1 - 10000000 <-> 100Hz?
-s3_2 - 10000000 <-> 100Hz?
-s3mini_1 - 10000000 <-> 100Hz
-s3mini_2 - 10000000 <-> 100Hz???
-samsungold_1 - 20000000 <-> 50Hz
-samsungold_2 - 20000000 <-> 50Hz
-gear_1 - 10000000 <-> 100Hz
-gear_2 - 10000000 <-> 100Hz
-lgwatch_1 - 5000000 <-> 200Hz
-lgwatch_2 - 5000000 <-> 200Hz
-
-1sec = 1e9 creation time
-
-
-citations
-    https://pure.au.dk/ws/files/93103132/sen099_stisenAT3.pdf (collection of dataset A + downsampling interpolation)
+PYTHONPATH=. python training/train.py
