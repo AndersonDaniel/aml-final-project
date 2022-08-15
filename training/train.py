@@ -9,7 +9,7 @@ from sklearn.metrics import f1_score, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 
 
-N_EPOCHS = 1000
+N_EPOCHS = 2000
 # N_EPOCHS = 200
 WINDOW_SIZE = 10
 MINI_WINDOW_SIZE = 20
