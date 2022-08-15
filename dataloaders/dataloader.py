@@ -9,6 +9,7 @@ class SensorFusionDataset(Dataset):
         self.labels = torch.nn.functional.one_hot(torch.tensor(np.array(data['labels']))).to(torch.float32)
         self.spectrograms = data['spectrograms']
         self.augmented = np.array(data['augmented'])
+        self.ids = data['ids']
         self.window_size = window_size
         self.mini_window_size = mini_window_size
         self.full_window_size = window_size * mini_window_size
@@ -56,5 +57,6 @@ class SensorFusionDataset(Dataset):
         return {
             'spectrograms': full_window,
             'label': self.labels[session_idx],
-            'augmented': self.augmented[session_idx]
+            'augmented': self.augmented[session_idx],
+            'id': self.ids[session_idx]
         }

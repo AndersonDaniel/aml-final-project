@@ -7,6 +7,7 @@ import json
 from tqdm import tqdm
 from sklearn.metrics import f1_score, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+from collections import defaultdict
 
 
 N_EPOCHS = 1000
@@ -36,8 +37,8 @@ def main():
     ]
     train_ds = torch.utils.data.ConcatDataset(train_datasets)
     val_ds = torch.utils.data.ConcatDataset(val_datasets)
-    val_ds = torch.utils.data.Subset(val_ds, indices=[i for i in range(len(val_ds))
-                                                      if not val_ds[i]['augmented']])
+    # val_ds = torch.utils.data.Subset(val_ds, indices=[i for i in range(len(val_ds))
+    #                                                   if not val_ds[i]['augmented']])
     
     train_dl = DataLoader(train_ds, shuffle=True, batch_size=64)
     val_dl = DataLoader(val_ds, shuffle=True, batch_size=64)
@@ -78,10 +79,12 @@ def main():
 
         if epoch % 20 == 0:
             evaluation_epochs.append(epoch)
-            train_acc, train_f1 = evaluate(model, train_dl, device)
+            # train_acc, train_f1 = evaluate(model, train_dl, device)
+            train_acc, train_f1 = evaluate_tta(model, train_dl, device)
             train_epoch_f1_scores.append(train_f1)
             train_epoch_accuracies.append(train_acc)
-            val_acc, val_f1 = evaluate(model, val_dl, device)
+            # val_acc, val_f1 = evaluate(model, val_dl, device)
+            val_acc, val_f1 = evaluate_tta(model, val_dl, device)
             val_epoch_f1_scores.append(val_f1)
             val_epoch_accuracies.append(val_acc)
 
@@ -110,7 +113,8 @@ def main():
     plt.savefig('results/f1.png')
     plt.close()
 
-    _, _, gt, pred = evaluate(model, val_dl, device, return_results=True)
+    # _, _, gt, pred = evaluate(model, val_dl, device, return_results=True)
+    _, _, gt, pred = evaluate_tta(model, val_dl, device, return_results=True)
     make_confusion_matrix(gt, pred, metadata['pamap2']['label_names'])
 
 
@@ -131,6 +135,37 @@ def evaluate(model, dl, device, return_results=False):
                 pred = np.concatenate([pred, curr_pred])
 
         pbar.set_postfix({'accuracy': (gt == pred).mean(), 'f1': f1_score(gt, pred, average='weighted')})
+
+    ret_val = ((gt == pred).mean(), f1_score(gt, pred, average='weighted'))
+    if return_results:
+        ret_val = (*ret_val, gt, pred)
+
+    return ret_val
+
+
+def evaluate_tta(model, dl, device, return_results=False):
+    pbar = tqdm(iter(dl), desc=f'Evaluating')
+    gt = {}
+    pred = defaultdict(lambda: [])
+    for batch in pbar:
+        with torch.no_grad():
+            curr_pred = model([x.to(device) for x in batch['spectrograms']]).detach().cpu().numpy()
+            curr_gt = batch['label'].detach().cpu().numpy().argmax(axis=1)
+            curr_ids = batch['id']
+
+            for sample_id, sample_gt, sample_pred in zip(curr_ids, curr_gt, curr_pred):
+                gt[sample_id] = sample_gt
+                pred[sample_id].append(sample_pred)
+
+    pred = {
+        k: np.stack(v).mean(axis=0).argmax() for k, v in pred.items()
+    }
+
+    keys = gt.keys()
+    gt = np.array([gt[k] for k in keys])
+    pred = np.array([pred[k] for k in keys])
+
+    print(f'accuracy: {(gt == pred).mean()}, f1: {f1_score(gt, pred, average="weighted")}')
 
     ret_val = ((gt == pred).mean(), f1_score(gt, pred, average='weighted'))
     if return_results:
