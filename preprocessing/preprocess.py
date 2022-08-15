@@ -2,6 +2,7 @@ import numpy as np
 import json
 from scipy.signal import stft
 from tqdm import tqdm
+from uuid import uuid4
 
 
 def main():
@@ -23,20 +24,24 @@ def preprocess(path, metadata):
     spectrograms = []
     labels = []
     augmented = []
+    ids = []
     for time_series, label in zip(x['time_series'], x['labels']):
+        curr_id = str(uuid4())
         spectrograms.append(get_spectrograms(time_series, metadata['freq_hz'], metadata['sensor_groups'],
                                              window_sec=.2))
         labels.append(label)
         augmented.append(False)
+        ids.append(curr_id)
         for i in range(3):
             augmented_time_series = augment_time_series(time_series)
             spectrograms.append(get_spectrograms(augmented_time_series, metadata['freq_hz'], metadata['sensor_groups'],
                                                  window_sec=.2))
             labels.append(label)
             augmented.append(True)
+            ids.append(curr_id)
 
     np.save(path.replace('/parsed/', '/preprocessed/'),
-            {'spectrograms': spectrograms, 'labels': labels, 'augmented': augmented})
+            {'spectrograms': spectrograms, 'labels': labels, 'augmented': augmented, 'ids': ids})
 
 
 def augment_time_series(x):
