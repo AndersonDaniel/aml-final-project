@@ -3,17 +3,17 @@ import json
 from scipy.signal import stft
 from tqdm import tqdm
 from uuid import uuid4
-import tsaug
+import pandas as pd
 
 def main():
     with open('data/metadata.json', 'r') as f:
         metadata = json.load(f)
 
-#     for p in tqdm('abcdefghi'):
-#         preprocess(f'data/parsed/har_hetero/{p}.npy', metadata['har_hetero'])
+    for p in tqdm('abcdefghi'):
+        preprocess(f'data/parsed/har_hetero/{p}.npy', metadata['har_hetero'])
 
-#     preprocess('data/parsed/skoda/left.npy', metadata['skoda'])
-#     preprocess('data/parsed/skoda/right.npy', metadata['skoda'])
+    preprocess('data/parsed/skoda/left.npy', metadata['skoda'])
+    preprocess('data/parsed/skoda/right.npy', metadata['skoda'])
 
     for s in tqdm(range(101, 110)):
         preprocess(f'data/parsed/pamap2/{s}.npy', metadata['pamap2'])
@@ -52,26 +52,18 @@ def preprocess(path, metadata):
             {'spectrograms': spectrograms, 'labels': labels, 'augmented': augmented, 'ids': ids})
 
 
-# def augment_time_series(x):
-#     return x + np.random.normal(loc=0, scale=x.std(axis=0) / 5, size=x.shape)
-
 def augmentation_jitter(x):
     return x + np.random.normal(loc=0, scale=x.std(axis=0) / 5, size=x.shape)
 
 def augmentation_scale(x, sigma=0.1):
     return x * np.random.normal(loc=1.0, scale=sigma, size=(1,x.shape[1]))
 
-def augmentation_rotation(x):
-    axis = np.random.uniform(low=-1, high=1, size=x.shape[1])
-    angle = np.random.uniform(low=-np.pi, high=np.pi)
-    return np.matmul(x, axangle2mat(axis,angle))
-
 def augmentation_dropout(x):
-    return tsaug.Dropout(p=0.05, per_channel=True).augment(x)
+    s = x.shape[0] * x.shape[1]
+    x_na = x.copy()
+    x_na[np.unravel_index(np.random.choice(s, replace=False, size=int(s * 0.05)), x.shape)] = np.nan
+    return pd.DataFrame(x_na).fillna(method='ffill').fillna(method='bfill').values
     
-def augmentation_timewarp(x):
-    return tsaug.TimeWarp(n_speed_change=3, max_speed_ratio=1.1).augment(x)
-
 def get_spectrograms(signals, freq_hz, signal_groups, window_sec=.25):
     signals = [np.linalg.norm(signals[:, group], axis=1) for group in signal_groups]
     return [
